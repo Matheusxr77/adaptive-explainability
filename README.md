@@ -25,7 +25,7 @@ Endpoint esperado pelo código: `http://localhost:12434/engines/llama.cpp/v1`
 No terminal integrado do VS Code:
 
 ```bash
-cd "c:/Users/mayeu/OneDrive/Área de Trabalho/explicabilidade-am"
+cd adaptative-explainability
 ```
 
 ### 2. Criar e preparar o ambiente Python
