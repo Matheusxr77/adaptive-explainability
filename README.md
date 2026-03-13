@@ -1,275 +1,161 @@
-# Explicabilidade Adaptativa com LIME/SHAP e SLMs Locais
+# Explicabilidade em Aprendizado de Máquina - Q1.1
 
-Implementação completa de métodos de explicabilidade adaptativa para modelos de machine learning, aprimorados por Small Language Models (SLMs). Este projeto implementa a metodologia de "Enhancing the Interpretability of SHAP Values Using Large Language Models" (arxiv.org/pdf/2409.00079).
+Projeto da disciplina Explicabilidade em Aprendizado de Máquina (UFAPE 2026).
 
-## 🎯 Visão Geral do Projeto
+Objetivo da Questão 1.1: descobrir, para cada instância de teste, o menor número de perturbações do LIME que mantém a explicação estável e coerente, usando SLM local via Docker Model Runner.
 
-Este projeto aborda duas questões de pesquisa principais:
+## Requisitos
 
-1. **Task 1.1: Seleção Adaptativa de Perturbações**
-   - Podemos selecionar adaptativamente o número ótimo de perturbações LIME para cada instância?
-   - Objetivo: Minimizar custo computacional mantendo coerência da explicação
+- Windows 10/11
+- Python 3.11+
+- Docker Desktop atualizado e em execução
+- Dataset em `data/credit_risk_dataset.csv`
 
-2. **Task 1.2: Agregação de Explicações**
-   - Podemos combinar múltiplas explicações "fracas" (baixo custo) em uma explicação "forte"?
-   - Objetivo: Alcançar qualidade comparável a explicações caras com custo reduzido
+## Execução Obrigatória com Docker Model Runner
 
-## 📊 Dataset
+Neste projeto, o uso de SLM local via Docker Model Runner é requisito obrigatório.
+Ou seja: para execução oficial, o modelo `ai/qwen2.5` deve estar ativo durante o pipeline.
 
-Dataset de Previsão de Risco de Crédito com features incluindo:
-- Informações pessoais (idade, renda, tempo de emprego)
-- Detalhes do empréstimo (valor, taxa de juros, propósito)
-- Histórico de crédito
-- Alvo: previsão de inadimplência de empréstimo (classificação binária)
+Endpoint esperado pelo código: `http://localhost:12434/engines/llama.cpp/v1`
 
-## 🏗️ Arquitetura
+## Passo a passo completo no VS Code
 
-```
-adaptive-explainability/
-├── data/                          # Dataset
-│   └── credit_risk_dataset.csv
-├── src/                           # Módulos principais
-│   ├── model_trainer.py           # Treinamento e avaliação XGBoost
-│   ├── slm_interface.py           # Cliente API do Docker SLM
-│   ├── explainer_wrapper.py       # LIME/SHAP com rastreamento
-│   ├── adaptive_selector.py       # Implementação Task 1.1
-│   ├── explanation_aggregator.py  # Implementação Task 1.2
-│   └── metrics.py                 # Métricas de coerência e custo
-├── configs/                       # Scripts de configuração
-│   ├── docker_setup.sh            # Setup Bash
-│   └── docker_setup.ps1           # Setup PowerShell
-├── outputs/                       # Relatórios e gráficos gerados
-├── instrucoes/                    # Papers de referência
-├── main.py                        # Script principal de execução
-└── requirements.txt               # Dependências Python
-```
+### 1. Abrir a pasta do projeto
 
-## 🚀 Início Rápido
-
-### 1. Instalar Dependências
+No terminal integrado do VS Code:
 
 ```bash
-pip install -r requirements.txt
+cd "c:/Users/mayeu/OneDrive/Área de Trabalho/explicabilidade-am"
 ```
 
-### 2. Configurar Docker SLMs
-
-**Windows (PowerShell):**
-```powershell
-cd configs
-.\docker_setup.ps1
-```
-
-**Linux/Mac:**
-```bash
-cd configs
-bash docker_setup.sh
-```
-
-Isso irá:
-- Baixar modelos Qwen2.5 e IBM Granite 4.0 Nano
-- Iniciar containers nas portas 8080 (primário) e 8081 (backup)
-- Testar conectividade
-
-### 3. Verificar Configuração
+### 2. Criar e preparar o ambiente Python
 
 ```bash
-docker ps
-# Deve mostrar qwen2.5-server e granite-nano-server rodando
-
-# Testar API
-curl -X POST http://localhost:8080/v1/completions \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Olá!", "max_tokens": 10}'
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install --upgrade pip
+.venv/Scripts/pip.exe install -r requirements.txt
 ```
 
-### 4. Executar Análise
+### 3. Baixar o modelo local (uma vez)
 
-**Demo rápido (5-10 minutos):**
 ```bash
-python main.py --modo demo
+docker model pull ai/qwen2.5
 ```
 
-**Análise completa (1-2 horas):**
+### 4. Iniciar o SLM local
+
+Em um terminal dedicado, execute:
+
 ```bash
-python main.py --modo completo
+docker model run ai/qwen2.5
 ```
 
-**Apenas modelo (sem SLM):**
+Comportamento esperado: o terminal entra em modo interativo (`Send a message`) e permanece ativo.
+Mantenha este terminal aberto durante toda a execução do pipeline.
+
+### 5. Rodar o pipeline em outro terminal
+
 ```bash
-python main.py --modo sem-slm
+.venv/Scripts/python.exe main.py
 ```
 
-## 📈 Funcionalidades Principais
+Ordem de execução:
+1. `scripts/00_eda.py`
+2. `scripts/01_modelo_baseline.py`
+3. `scripts/02_lime_base.py`
+4. `scripts/03_questao_1_1.py`
+5. `scripts/04_relatorio_final.py`
 
-### Seleção Adaptativa de Perturbações
-- **Busca sequencial**: Testa níveis de perturbação do baixo ao alto
-- **Busca binária**: Mais rápida porém menos precisa
-- **Métricas de coerência**: 
-  - Auto-avaliação do SLM (escala 0-10)
-  - Variância de estabilidade das features
-  - Score de coerência composto
-- **Características da instância**: Correlaciona complexidade com perturbações ótimas
+Tempo médio: 15 a 40 minutos, variando conforme hardware e carga do SLM.
 
-### Agregação de Explicações
-- **Estratégia de concatenação**: Combinação simples
-- **Estratégia de síntese**: Agregação guiada com detecção de consenso
-- **Métricas de qualidade**:
-  - Similaridade de Jaccard (alinhamento de features)
-  - Concordância direcional
-  - Correlação de importância
-- **Análise de custo**: Compara N×fracas vs 1×forte
+### 6. Validar resultados
 
-### Visualizações
-- Dashboards de exploração de dados
-- Performance do modelo (curvas ROC, PR, matriz de confusão)
-- Rankings de importância das features
-- Curvas perturbação vs coerência
-- Gráficos de trade-off custo-qualidade
-- Comparações LIME vs SHAP
-
-## 🔬 Metodologia
-
-Baseado no paper "Enhancing the Interpretability of SHAP Values Using Large Language Models":
-
-1. **Treinar modelo preditivo** (XGBoost para risco de crédito)
-2. **Gerar explicações** usando LIME/SHAP
-3. **Converter para linguagem natural** via SLM local
-4. **Avaliar coerência** usando auto-avaliação do SLM + estabilidade
-5. **Selecionar adaptativamente** o mínimo de perturbações que atendem o threshold
-6. **Agregar explicações fracas** para eficiência de custo
-
-## 📊 Resultados Esperados
-
-**Task 1.1:**
-- Redução de 30-50% nas perturbações em média
-- Instâncias próximas à fronteira de decisão requerem mais perturbações
-- Predições de alta confiança usam menos perturbações
-
-**Task 1.2:**
-- Alinhamento de features 70%+ com ground truth
-- Economia de 30-40% no custo computacional
-- Estratégia de síntese supera concatenação
-
-## 🛠️ Configuração
-
-### Parâmetros do Modelo
-Editar em main.py ou módulos:
-- `RANDOM_STATE = 42`
-- `WEAK_PERTURBATIONS = 10`
-- `N_WEAK_EXPLANATIONS = 20`
-- `STRONG_PERTURBATIONS = 500`
-
-### Seletor Adaptativo
-```python
-AdaptivePerturbationSelector(
-    perturbation_levels=[5, 10, 25, 50, 100, 250, 500, 1000],
-    coherence_threshold=7.0,        # Escala 0-10
-    variance_threshold=0.15,        # Variância máxima aceitável
-    stability_runs=3                # Execuções para teste de estabilidade
-)
+```bash
+.venv/Scripts/python.exe tests.py
 ```
 
-### Tamanhos de Amostra
-- `n_test_instances`: Número de instâncias para analisar (50 para demo, 200+ para completo)
-- `n_adaptive_samples`: Instâncias para Task 1.1 (5 para demo)
-- `n_aggregation_samples`: Instâncias para Task 1.2 (5 para demo)
+## Como confirmar que o Docker foi realmente usado
 
-## 📦 Arquivos de Saída
+Após o `main.py`, verifique:
 
-Todas as saídas são salvas em `outputs/`:
-- `data_exploration.png` - Visualizações do dataset
-- `model_performance.png` - Métricas do classificador
-- `feature_importance.png` - Rankings de features XGBoost
-- `task1.1_adaptive_selection.png` - Resultados da seleção adaptativa
-- `task1.1_characteristics_correlation.png` - Características das instâncias
-- `task1.2_aggregation_results.png` - Comparação de agregação
-- `task1.2_optimal_n.png` - Número ótimo de explicações fracas
-- `lime_vs_shap_comparison.png` - Comparação de métodos
-- `*.csv` - Tabelas de resultados detalhados
-- `summary_report.txt` - Resumo textual
+- `resultados/cache/llm_prompts.csv`
+- `resultados/cache/llm_responses.json`
+- `resultados/csv/q11_text_explanations.csv`
 
-## 🐛 Solução de Problemas
+Se as respostas textuais estiverem preenchidas e sem status predominante `offline_skip`, o SLM foi utilizado corretamente.
 
-### SLM Não Disponível
-```
-⚠ SLM not available: Connection refused
-```
-**Solução:** 
-1. Execute `docker ps` para verificar os containers
-2. Reinicie: `docker restart qwen2.5-server`
-3. Verifique logs: `docker logs qwen2.5-server`
+## Estrutura do projeto
 
-### Falta de Memória
-```
-Docker error: Out of memory
-```
-**Solução:** Aumente o limite de memória do Docker nas configurações do Docker Desktop (recomendado 8GB+)
-
-### Performance Lenta
-**Soluções:**
-1. Reduza os tamanhos de amostra em main.py
-2. Use busca binária ao invés de sequencial
-3. Reduza `stability_runs` para 2
-4. Use níveis menores de perturbação
-
-### Erros LIME/SHAP
-```
-TypeError: predict_proba() missing
-```
-**Solução:** Certifique-se que o modelo tem o método `predict_proba` (XGBoost, classificadores sklearn)
-
-## 📚 Referências
-
-1. [Enhancing the Interpretability of SHAP Values Using Large Language Models](https://arxiv.org/pdf/2409.00079)
-2. [Paper LIME](https://arxiv.org/abs/1602.04938)
-3. [Paper SHAP](https://arxiv.org/abs/1705.07874)
-4. [Docker Model Runner](https://hub.docker.com/r/ai/)
-
-## 🔄 Estendendo o Projeto
-
-### Adicionar Novos Datasets
-1. Coloque o CSV em `data/`
-2. Atualize `data_path` em main.py
-3. Ajuste pré-processamento se necessário
-
-### Experimentar Diferentes Modelos
-```python
-from sklearn.ensemble import RandomForestClassifier
-
-model = RandomForestClassifier(...)
-trainer.model = model
+```text
+explicabilidade-am/
+	data/
+		credit_risk_dataset.csv
+	models/
+	resultados/
+		csv/
+		figuras/
+		cache/
+	relatorio/
+	scripts/
+		00_eda.py
+		01_modelo_baseline.py
+		02_lime_base.py
+		03_questao_1_1.py
+		04_relatorio_final.py
+		data_loader.py
+	src/
+		config.py
+		io_utils.py
+		plotting.py
+		llm_client.py
+		explainer.py
+		evaluation.py
+	main.py
+	tests.py
+	requirements.txt
 ```
 
-### Adicionar Métricas Personalizadas
-Estenda `metrics.py`:
-```python
-@staticmethod
-def custom_metric(explanation, ground_truth):
-    # Sua implementação de métrica
-    pass
+## Solução de problemas
+
+### Erro de espaço em disco ao baixar modelo
+
+Se aparecer erro de falta de espaço, libere ao menos 8 a 10 GB no `C:` e repita o pull.
+
+### Erro `resumable: exceeded retry budget`
+
+Use este procedimento de limpeza:
+
+```bash
+docker model rm ai/qwen2.5 || true
+rm -rf "$HOME/.docker/models"
 ```
 
-### Test Other SLMs
-Update `slm_interface.py` URLs or add new endpoints
+Depois, reinicie o Docker Desktop e rode novamente:
 
-## 👥 Contributors
+```bash
+docker model pull ai/qwen2.5
+```
 
-Project developed for adaptive explainability research using:
-- Python 3.9+
-- XGBoost 2.0+
-- LIME 0.2+
-- SHAP 0.42+
-- Qwen2.5 / IBM Granite 4.0 Nano
+### `Activate.ps1` falhando no terminal bash
 
-## 📄 License
+No bash, não use `Activate.ps1`. Execute diretamente com o Python do ambiente:
 
-This project is for educational and research purposes.
+```bash
+.venv/Scripts/python.exe main.py
+```
 
-## 🙏 Acknowledgments
+## Resultados esperados
 
-Based on methodology from "Enhancing the Interpretability of SHAP Values Using Large Language Models" and XAI best practices.
+Ao final da execução, os arquivos principais são:
 
----
+- `models/rf_model.joblib`
+- `models/preprocessor.joblib`
+- `resultados/csv/q11_raw_runs.csv`
+- `resultados/csv/q11_adaptive_n_by_instance.csv`
+- `resultados/csv/q11_n_level_summary.csv`
+- `resultados/figuras/*.png`
+- `relatorio/relatorio_final.md`
 
-**Questions or Issues?** Check the troubleshooting section or review the detailed comments in the notebook.
+## Reprodutibilidade
+
+O projeto usa `RANDOM_STATE = 42` e sementes derivadas por repetição (`42 + rep_idx`).

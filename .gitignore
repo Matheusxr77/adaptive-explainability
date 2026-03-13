@@ -1,70 +1,17 @@
-# Python
+# Ambiente Python
+.venv/
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
-venv/
-ENV/
-env/
-.venv
-
-# Jupyter Notebook
-.ipynb_checkpoints
-*-checkpoint.ipynb
-
-# IDE
+*.pyc
 .vscode/
-.idea/
-*.swp
-*.swo
-*~
+relatorio/
 
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
+# Artefatos gerados pelo projeto
+models/
+resultados/
+relatorio/metricas_resumo.csv
+relatorio/conclusoes_finais.csv
 
-# Project specific
-outputs/*.png
-outputs/*.csv
-outputs/*.txt
-outputs/*.html
-!outputs/.gitkeep
-
-# Model files
-*.pkl
-*.joblib
-*.h5
-*.pt
-*.pth
-
-# Data (keep structure, but not large files)
-data/*.csv.gz
-data/*.zip
-!data/credit_risk_dataset.csv
-
-# Logs
-*.log
-logs/
-
-# Temporary files
-tmp/
-temp/
+# Arquivos da metodologia Spec-Driven Development
+CONSTITUTION.md
+SPEC.md
+PLAN.md

@@ -1,28 +1,10 @@
-# Core ML and Data Science
-numpy>=1.24.0
-pandas>=2.0.0
-scikit-learn>=1.3.0
-xgboost>=2.0.0
-
-# Explainability Libraries
-shap>=0.42.0
-lime>=0.2.0
-
-# Visualization
-matplotlib>=3.7.0
-seaborn>=0.12.0
-plotly>=5.14.0
-
-# LLM Interface
-requests>=2.31.0
-httpx>=0.24.0
-
-# Jupyter and Reporting
-jupyter>=1.0.0
-notebook>=7.0.0
-ipywidgets>=8.0.0
-
-# Utilities
-tqdm>=4.65.0
-joblib>=1.3.0
-pyyaml>=6.0
+scikit-learn>=1.3
+lime>=0.2
+openai>=1.0
+matplotlib>=3.7
+seaborn>=0.13
+pandas>=2.0
+numpy>=1.26
+joblib>=1.3
+scipy>=1.11
+tqdm>=4.66
